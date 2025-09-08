@@ -1,0 +1,4 @@
+github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
+github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
+github.com/wesleysantana/config-loader v0.2.0 h1:7/pr9Euk4KqCKQDlaSzX8zhIg15kNQDP9OHGtTVpfuw=
+github.com/wesleysantana/config-loader v0.2.0/go.mod h1:fum1GuO3CWtepK0Lb7HJZ8SYP7yATnMzQlBLQEU9F+0=

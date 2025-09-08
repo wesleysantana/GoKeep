@@ -3,8 +3,58 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"log"
+	"log/slog"
 	"net/http"
+	"os"
+	"strings"
+
+	configloader "github.com/wesleysantana/config-loader"
 )
+
+type Config struct {
+	ServerPort string `env:"SERVER_PORT,5000"`
+	DBPassword string `env:"DB_PASSWORD,required"`
+	LevelLog   string `env:"LEVEL_LOG,info"`
+}
+
+func main() {
+
+	config := Config{}
+	if err := configloader.Load(&config); err != nil {
+		log.Fatal(err)
+	}
+
+	slog.SetDefault(newLogger(os.Stderr, config.GetLevelLog()))
+	slog.Info(fmt.Sprintf("Server running on port %s", config.ServerPort))
+
+	mux := http.NewServeMux()
+
+	staticHandler := http.FileServer(http.Dir("views/static/"))
+	mux.Handle("/static/", http.StripPrefix("/static/", staticHandler))
+
+	mux.HandleFunc("/", noteList)
+	mux.HandleFunc("/note/view", noteView)
+	mux.HandleFunc("/note/new", noteNew)
+	mux.HandleFunc("/note/create", noteCreate)
+
+	http.ListenAndServe(fmt.Sprintf(":%s", config.ServerPort), mux)
+}
+
+func (c Config) GetLevelLog() slog.Level {
+	switch strings.ToLower(c.LevelLog) {
+	case "debug":
+		return slog.LevelDebug
+	case "info":
+		return slog.LevelInfo
+	case "warn":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
+}
 
 func noteList(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -64,19 +114,4 @@ func noteCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprint(w, "Criando uma nova nota...")
-}
-
-func main() {
-	fmt.Println("Servidor rodando na porta 5000")
-	mux := http.NewServeMux()
-
-	staticHandler := http.FileServer(http.Dir("views/static/"))
-	mux.Handle("/static/", http.StripPrefix("/static/", staticHandler))
-
-	mux.HandleFunc("/", noteList)
-	mux.HandleFunc("/note/view", noteView)
-	mux.HandleFunc("/note/new", noteNew)
-	mux.HandleFunc("/note/create", noteCreate)
-
-	http.ListenAndServe(":5000", mux)
 }
