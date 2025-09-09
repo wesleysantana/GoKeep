@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/wesleysantana/GoKeep/internal/handlers"
 	configloader "github.com/wesleysantana/config-loader"
@@ -25,7 +24,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	slog.SetDefault(newLogger(os.Stderr, config.GetLevelLog()))
+	logger := handlers.Logger{}
+	slog.SetDefault(logger.NewLogger(os.Stderr, logger.GetLevelLog(config.LevelLog)))
 	slog.Info(fmt.Sprintf("Server running on port %s", config.ServerPort))
 
 	mux := http.NewServeMux()
@@ -34,25 +34,13 @@ func main() {
 	mux.Handle("/static/", http.StripPrefix("/static/", staticHandler))
 
 	noteHandler := handlers.NewNoteHandler()
-	mux.HandleFunc("/", noteHandler.NoteList)
-	mux.HandleFunc("/note/view", noteHandler.NoteView)
-	mux.HandleFunc("/note/new", noteHandler.NoteNew)
-	mux.HandleFunc("/note/create", noteHandler.NoteCreate)
+	mux.Handle("/", handlers.HandlerWithError(noteHandler.NoteList))
+	mux.Handle("/note/view", handlers.HandlerWithError(noteHandler.NoteView))
+	mux.Handle("/note/new", handlers.HandlerWithError(noteHandler.NoteNew))
+	mux.Handle("/note/create", handlers.HandlerWithError(noteHandler.NoteCreate))
 
-	http.ListenAndServe(fmt.Sprintf(":%s", config.ServerPort), mux)
-}
-
-func (c Config) GetLevelLog() slog.Level {
-	switch strings.ToLower(c.LevelLog) {
-	case "debug":
-		return slog.LevelDebug
-	case "info":
-		return slog.LevelInfo
-	case "warn":
-		return slog.LevelWarn
-	case "error":
-		return slog.LevelError
-	default:
-		return slog.LevelInfo
+	if err := http.ListenAndServe(
+		fmt.Sprintf(":%s", config.ServerPort), mux); err != nil {
+		panic(err)
 	}
 }
