@@ -35,8 +35,8 @@ func replaceTimeFormat(group []string, a slog.Attr) slog.Attr {
 func (l *Logger) NewLogger(out io.Writer, minLevel slog.Level) *slog.Logger {
 	return slog.New(slog.NewJSONHandler(out,
 		&slog.HandlerOptions{
-			AddSource:   true,
-			Level:       minLevel,
+			AddSource:   false,
+			Level:       slog.LevelInfo,
 			ReplaceAttr: replaceTimeFormat,
 		}))
 }

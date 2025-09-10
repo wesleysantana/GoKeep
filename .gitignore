@@ -31,3 +31,8 @@ go.work.sum
 # .idea/
 .vscode/
 !.vscode/launch.json
+
+# Banco de dados PostgreSQL
+postgres-data/
+*.sqlite
+*.db
